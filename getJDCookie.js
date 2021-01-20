@@ -124,7 +124,7 @@ function getCookie() {
       clearInterval($.timer);
       $.done();
     }
-  }, 1000)
+  }, 10000)
 }
 
 function formatCookie(headers) {

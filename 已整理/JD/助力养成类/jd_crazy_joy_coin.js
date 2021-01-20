@@ -1,45 +1,33 @@
 /*
-crazyJoy任务
-
-每天运行一次即可
+crazy joy
+挂机领金币/宝箱专用
 
 
 已支持IOS双京东账号,Node.js支持N个京东账号
 脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
 ============Quantumultx===============
 [task_local]
-#crazyJoy任务
-10 7 * * * https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy.js, tag=crazyJoy任务, enabled=true
+#crazyJoy挂机
+10 7 * * * https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy_coin.js, tag=crazyJoy挂机, enabled=true
 
 ================Loon==============
 [Script]
-cron "10 7 * * *" script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy.js,tag=crazyJoy任务
+cron "10 7 * * *" script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy_coin.js,tag=crazyJoy挂机
 
 ===============Surge=================
-crazyJoy任务 = type=cron,cronexp="10 7 * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy.js
+crazyJoy挂机 = type=cron,cronexp="10 * * * *",wake-system=1,timeout=20,script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy_coin.js
 
 ============小火箭=========
-crazyJoy任务 = type=cron,script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy.js, cronexpr="10 7 * * *", timeout=200, enable=true
+crazyJoy挂机 = type=cron,script-path=https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_crazy_joy_coin.js, cronexpr="10 * * * *", timeout=200, enable=true
 
  */
 
 
-const $ = new Env('crazyJoy任务');
+const $ = new Env('crazyJoy挂机');
 const JD_API_HOST = 'https://api.m.jd.com/';
 
 const notify = $.isNode() ? require('./sendNotify') : '';
-let jdNotify = true;//是否关闭通知，false打开通知推送，true关闭通知推送
-let helpSelf = false // 循环助力，默认关闭
-let applyJdBean = 0; //疯狂的JOY京豆兑换，目前最小值为2000京豆，默认为 0 不开启京豆兑换
 let cookiesArr = [], cookie = '', message = '';
-const inviteCodes = [
-  'RrdhYtBwArj4lEzwabfIy6t9zd5YaBeE',
-  'k-rv6it0pet7_5N6_UJKt6t9zd5YaBeE',
-  '2K-uvAal9A_PWSsdOZNQSQ==',
-  'zVExHoHsSwhi2DmjsVnB1Kt9zd5YaBeE',
-  '4j3WhTDyE57QAd9rce15bA=='
-];
-const randomCount = $.isNode() ? 10 : 5;
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -177,37 +165,10 @@ if ($.isNode()) {
     $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
     return;
   }
-  await requireConfig();
-  $.nextCode = ["EdLPh8A6X5G1iWXu-uPYfA==", "nCQQXQHKGjPCb7jkd8q2U-aCTjZMxL3s"];
-  $.nextCode = $.nextCode[randomNumber(0, $.nextCode.length)];
-  $.selfCodes = []
-  for (let i = 0; i < cookiesArr.length; i++) {
-    if (cookiesArr[i]) {
-      cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
-      $.index = i + 1;
-      $.isLogin = true;
-      $.nickName = '';
-      message = '';
-      $.GROWTH_REWARD_BEAN = 0;//解锁等级奖励的京豆
-      await TotalBean();
-      console.log(`\n开始【京东账号${$.index}】${$.nickName || $.UserName}\n`);
-      if (!$.isLogin) {
-        $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
-
-        if ($.isNode()) {
-          await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
-        }
-        continue
-      }
-      await shareCodesFormat()
-      await jdCrazyJoy()
-    }
-  }
-
-  if (helpSelf) {
-    console.log(`开始循环助力`)
-    // 助力
+  let count = 0
+  while (true) {
+    count++
+    console.log(`============开始第${count}次挂机=============`)
     for (let i = 0; i < cookiesArr.length; i++) {
       if (cookiesArr[i]) {
         cookie = cookiesArr[i];
@@ -218,38 +179,13 @@ if ($.isNode()) {
         await TotalBean();
         console.log(`\n开始【京东账号${$.index}】${$.nickName || $.UserName}\n`);
         if (!$.isLogin) {
-          $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
-
-          if ($.isNode()) {
-            await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
-          }
+         $.log(`\n京东账号${$.index} ${$.nickName || $.UserName}\ncookie已过期,请重新登录获取\n`)
           continue
         }
-        await shareCodesFormat()
-        await helpFriends()
+        await jdJxStory()
       }
     }
-    // 领取任务奖励
-    for (let i = 0; i < cookiesArr.length; i++) {
-      if (cookiesArr[i]) {
-        cookie = cookiesArr[i];
-        $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
-        $.index = i + 1;
-        $.isLogin = true;
-        $.nickName = '';
-        await TotalBean();
-        console.log(`\n开始【京东账号${$.index}】${$.nickName || $.UserName}\n`);
-        if (!$.isLogin) {
-          $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
-
-          if ($.isNode()) {
-            await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
-          }
-          continue
-        }
-        await doTasks()
-      }
-    }
+    $.log(`\n\n`)
   }
 })()
   .catch((e) => {
@@ -259,123 +195,109 @@ if ($.isNode()) {
     $.done();
   })
 
-async function jdCrazyJoy() {
+async function jdJxStory() {
   $.coin = 0
   $.bean = 0
-  await getUserInfo($.nextCode)
-  await doSign()
-  // 助力好友
-  await helpFriends()
-  await doTasks()
-  await getGrowthReward();//领取解锁的等级奖励
-  await getCoin()
-  await getUserBean()
-  if ( applyJdBean!==0 && applyJdBean<=$.bean){
-    await $.wait(1000)
-    console.log(`检测您打开了自动兑换开关，去兑换京豆`)
-    await doApplyJdBean(applyJdBean)
+
+  $.canBuy = true
+  await getJoyList()
+  await $.wait(1000)
+  await getJoyShop()
+  await $.wait(1000)
+  if ($.joyIds && $.joyIds.length > 0) {
+    $.log('当前JOY分布情况')
+    $.log(`\n${$.joyIds[0]} ${$.joyIds[1]} ${$.joyIds[2]} ${$.joyIds[3]}`)
+    $.log(`${$.joyIds[4]} ${$.joyIds[5]} ${$.joyIds[6]} ${$.joyIds[7]}`)
+    $.log(`${$.joyIds[8]} ${$.joyIds[9]} ${$.joyIds[10]} ${$.joyIds[11]}\n`)
   }
-  await showMsg();
-}
-async function doTasks() {
-  await getTaskInfo()
-  for (let j = 0; j < $.taskList.length; ++j) {
-    let task = $.taskList[j];
-    if (task['taskTypeId'] === 102) {
-      message += `${task.taskTitle}：${task['doneTimes']}/${task.ext.count}\n`;
+
+  // 如果格子全部被占有且没有可以合并的JOY，只能回收低级的JOY (没有34级JOY时才会执行)
+  if(checkHasFullOccupied() && !checkCanMerge() && !checkHas34Level()) {
+    const minJoyId = Math.min(...$.joyIds);
+    const boxId = $.joyIds.indexOf(minJoyId);
+    console.log(`格子全部被占有且没有可以合并的JOY，回收${boxId + 1}号位等级为${minJoyId}的JOY`)
+    await sellJoy(minJoyId, boxId);
+    await getJoyList();
+  }
+
+  for (let i = 0; i < $.joyIds.length; ++i) {
+    if (!$.canBuy) {
+      $.log(`金币不足，跳过购买`)
+      break
     }
-    if (task.status === 0 && task.taskTypeId === 103)
-      for (let i = task.doneTimes; i < task.ext.count; ++i) {
-        await doTask(task.taskId)
-      }
-    if (task.status === 2)
-      await awardTask(task.taskId)
+    if ($.joyIds[i] === 0) {
+      await buyJoy($.buyJoyLevel)
+      await $.wait(1000)
+    }
   }
-}
-function doApplyJdBean(bean = 1000) {
-  // 兑换京豆
-  let body = {"paramData":{"bean":bean}}
-  return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_user_applyJdBeanPaid', JSON.stringify(body)), async (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (safeGet(data)) {
-            data = JSON.parse(data);
-            if (data.success) {
-              console.log(`兑换${bean}京豆成功`)
-              message += `兑换京豆：${bean}京豆成功\n`;
-            } else {
-              console.log(`兑换${bean}京豆失败，错误信息：${data.resultTips||data.message}`)
-            }
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve();
+  await getJoyList()
+  let obj = {};
+  $.joyIds.map((vo, idx) => {
+    if (vo !== 0) {
+      if (obj[vo]) {
+        obj[vo].push(idx)
+      } else {
+        obj[vo] = [idx]
       }
-    })
+    }
   })
-}
-function getUserInfo(code = "EdLPh8A6X5G1iWXu-uPYfA==") {
-  let body = {"paramData": {"inviter": code}}
-  return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_user_gameState', JSON.stringify(body)), async (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (safeGet(data)) {
-            data = JSON.parse(data);
-            if (data.success && data.data && data.data.userInviteCode) {
-              console.log(`\n【京东账号${$.index}（${$.nickName || $.UserName}）的${$.name}好友互助码】${data.data.userInviteCode}`)
-              $.selfCodes.push(data.data.userInviteCode)
-              $.nextCode = data.data.userInviteCode
-              message += `${data.data['nickName']}：${data.data['userTopLevelJoyId']}级JOY\n`;
-            }
-            else
-              console.log(`用户信息获取失败`)
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve();
-      }
-    })
-  })
-}
-
-async function helpFriends() {
-  let codes = $.newShareCodes.concat($.selfCodes)
-  for (let code of codes) {
-    if (!code) continue
-    await helpFriend(code)
-    await $.wait(500)
+  for (let idx in obj) {
+    const vo = obj[idx]
+    if (idx < 34 && vo.length >= 2) {
+      await mergeJoy(vo[0], vo[1])
+      await $.wait(3000)
+    }
   }
+
+  await hourBenefit()
+  await $.wait(1000)
+  await getCoin()
+  await $.wait(1000)
+  await getUserBean()
+  await $.wait(5000)
+  console.log(`当前信息：${$.bean} 京豆，${$.coin} 金币`)
 }
 
-function getTaskInfo() {
-  let body = {"paramData": {"taskType": "DAY_TASK"}}
+function checkHasFullOccupied() {
+  return !$.joyIds.includes(0);
+}
+
+// 查询是否有34级JOY
+function checkHas34Level() {
+  return $.joyIds.includes(34);
+}
+
+function checkCanMerge() {
+  let obj = {};
+  let canMerge = false;
+  $.joyIds.forEach((vo, idx) => {
+    if (vo !== 0 && vo !== 34) {
+      if (obj[vo]) {
+        obj[vo].push(idx)
+        canMerge = true;
+      } else {
+        obj[vo] = [idx]
+      }
+    }
+  });
+  return canMerge;
+}
+
+function getJoyList() {
+  $.joyIds = []
   return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_getTaskState', JSON.stringify(body)), async (err, resp, data) => {
+    $.get(taskUrl('crazyJoy_user_gameState'), async (err, resp, data) => {
       try {
-        $.taskList = []
         if (err) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} API请求失败，请检查网路重试`)
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if (data.success && data.data && data.data.length) {
-              $.taskList = data.data;
-            } else {
-              console.log(`任务信息获取失败`)
-            }
+            if (data.success && data.data.joyIds) {
+              $.joyIds = data.data.joyIds
+            } else
+              console.log(`joy信息获取信息失败`)
           }
         }
       } catch (e) {
@@ -387,9 +309,41 @@ function getTaskInfo() {
   })
 }
 
-function doSign() {
+function getJoyShop() {
+  const body = {"paramData": {"entry": "SHOP"}}
+  return new Promise((resolve) => {
+    $.get(taskUrl('crazyJoy_joy_allowBoughtList', JSON.stringify(body)), async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          data = JSON.parse(data);
+          if (data.success && data.data && data.data.shop) {
+            const shop = data.data.shop.filter(vo => vo.status === 1) || []
+            $.buyJoyLevel = shop.length ? shop[shop.length - 1]['joyId'] : 1;//可购买的最大等级
+            if ($.isNode() && process.env.BUY_JOY_LEVEL) {
+              $.log(`当前可购买的最高JOY等级为${$.buyJoyLevel}级\n`)
+              $.buyJoyLevel = (process.env.BUY_JOY_LEVEL * 1) > $.buyJoyLevel ? $.buyJoyLevel : process.env.BUY_JOY_LEVEL * 1;
+              $.cost = shop[$.buyJoyLevel - 1]['coins']
+            } else {
+              $.cost = shop.length ? shop[shop.length - 1]['coins'] : Infinity
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp);
+      } finally {
+        resolve(data);
+      }
+    })
+  })
+}
+
+function mergeJoy(x, y) {
+  let body = {"operateType": "MERGE", "fromBoxIndex": x, "targetBoxIndex": y}
   return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_doSign'), async (err, resp, data) => {
+    $.get(taskUrl('crazyJoy_joy_moveOrMerge', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
@@ -397,11 +351,10 @@ function doSign() {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if (data.success && data.data) {
-              console.log(`签到成功，获得${data.data.beans}京豆，${data.data.coins}金币`)
-            } else {
-              console.log(data.message)
-            }
+            if (data.success && data.data.newJoyId) {
+              console.log(`合并成功，获得${data.data.newJoyId}级Joy`)
+            } else
+              console.log(`合并失败，错误`)
           }
         }
       } catch (e) {
@@ -413,67 +366,73 @@ function doSign() {
   })
 }
 
-function doTask(taskId) {
-  let body = {"action": "MARK", "taskId": taskId}
-  return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_viewPage', JSON.stringify(body)), async (err, resp, data) => {
+function buyJoy(joyId) {
+  const body = {"action": "BUY", "joyId": joyId, "boxId": ""}
+  return new Promise((resolve) => {
+    $.get(taskUrl('crazyJoy_joy_trade', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} API请求失败，请检查网路重试`)
         } else {
-          if (safeGet(data)) {
-            data = JSON.parse(data);
-            if (data.success && data.data && data.data.taskRecordId) {
-              console.log(`去做任务【${data.data.taskTitle}】，任务id: ${data.data.taskRecordId}`)
-              await $.wait(30000)
-              await recordTask(taskId, data.data.taskRecordId)
-            } else {
-              console.log(`获取信息失败`)
+          data = JSON.parse(data);
+          if (data.success) {
+            if (data.data.eventInfo) {
+              await openBox(data.data.eventInfo.eventType, data.data.eventInfo.eventRecordId)
+              $.canBuy = false
+              return
             }
+            $.log(`购买${joyId}级joy成功，剩余金币【${data.data.totalCoins}】`)
+            $.coin = data.data.totalCoins
+          } else {
+            console.log(data.message)
           }
         }
       } catch (e) {
-        $.logErr(e, resp)
+        $.logErr(e, resp);
       } finally {
-        resolve();
+        resolve(data);
       }
     })
   })
 }
 
-function recordTask(taskId, taskRecordId) {
-  let body = {"action": "INCREASE", "taskId": taskId, "taskRecordId": taskRecordId}
-  return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_viewPage', JSON.stringify(body)), async (err, resp, data) => {
+// 出售（回收）joy
+function sellJoy(joyId, boxId) {
+  const body = {"action": "SELL", "joyId": joyId, "boxId": boxId}
+  return new Promise((resolve) => {
+    $.get(taskUrl('crazyJoy_joy_trade', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
           console.log(`${$.name} API请求失败，请检查网路重试`)
         } else {
-          if (safeGet(data)) {
-            data = JSON.parse(data);
-            if (data.success) {
-              console.log(`任务【${data.data.taskTitle}】记录成功，去领奖`)
-              await awardTask(taskId)
-            } else {
-              console.log(`获取信息失败`)
+          data = JSON.parse(data);
+          if (data.success) {
+            if (data.data.eventInfo) {
+              await openBox(data.data.eventInfo.eventType, data.data.eventInfo.eventRecordId)
+              $.canBuy = false
+              return
             }
+            $.log(`回收${joyId}级joy成功，剩余金币【${data.data.totalCoins}】`)
+            $.coin = data.data.totalCoins
+          } else {
+            console.log(data.message)
           }
         }
       } catch (e) {
-        $.logErr(e, resp)
+        $.logErr(e, resp);
       } finally {
-        resolve();
+        resolve(data);
       }
     })
   })
 }
 
-function awardTask(taskId) {
-  let body = {"taskId": taskId}
+function hourBenefit() {
+  let body = {"eventType": "HOUR_BENEFIT"}
   return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_obtainAward', JSON.stringify(body)), async (err, resp, data) => {
+    $.get(taskUrl('crazyJoy_event_obtainAward', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
@@ -481,40 +440,8 @@ function awardTask(taskId) {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if (data.success && data.data && data.data.taskTitle) {
-              console.log(`任务【${data.data.taskTitle}】领奖成功，任务奖励：${data.data.beans}京豆，${data.data.coins}金币`)
-            } else {
-              console.log(`任务领奖信息获取失败`)
-            }
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve();
-      }
-    })
-  })
-}
-
-function helpFriend(code) {
-  let body = {"paramData": {"inviter": code}}
-  return new Promise(async resolve => {
-    $.get(taskUrl('crazyJoy_task_recordAssist', JSON.stringify(body)), async (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (safeGet(data)) {
-            data = JSON.parse(data);
-            if (data['resultCode'] ==='0') {
-              console.log(`助力结果:${JSON.stringify(data)}`);
-            } else if (data['resultCode'] === '2000402') {
-              console.log(data.resultTips)
-            } else {
-              console.log(`助力异常:${JSON.stringify(data)}`);
-            }
+            if (data.success)
+              console.log(`金币补给领取成功，获得${data.data.coins}金币`)
           }
         }
       } catch (e) {
@@ -539,7 +466,7 @@ function getUserBean() {
             if (data.success && data.data && data.data.totalBeans)
               $.bean = data.data.totalBeans
             else
-              console.log(`获取信息失败`)
+              console.log(`京豆信息获取信息失败`)
           }
         }
       } catch (e) {
@@ -561,8 +488,19 @@ function getCoin() {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
+            if (data.data && data.data.tryMoneyJoyBeans) {
+              console.log(`分红狗生效中，预计获得 ${data.data.tryMoneyJoyBeans} 京豆奖励`)
+            }
             if (data.data && data.data.totalCoinAmount) {
               $.coin = data.data.totalCoinAmount;
+            } else {
+              $.coin = `获取当前金币数量失败`
+            }
+            if (data.data && data.data.luckyBoxRecordId) {
+              await openBox('LUCKY_BOX_DROP',data.data.luckyBoxRecordId)
+            }
+            if (data.data) {
+              $.log(`此次在线收益：获得 ${data.data['coins']} 金币`)
             }
           }
         }
@@ -574,11 +512,11 @@ function getCoin() {
     })
   })
 }
-//领取解锁等级奖励（京豆）
-function getGrowthReward() {
+
+function openBox(eventType = 'LUCKY_BOX_DROP', boxId) {
+  let body = { eventType, "eventRecordId": boxId}
   return new Promise(async resolve => {
-    const body = { "paramData":{"eventType":"GROWTH_REWARD"} };
-    $.get(taskUrl('crazyJoy_event_getGrowthAndSceneState', JSON.stringify(body)), async (err, resp, data) => {
+    $.get(taskUrl('crazyJoy_event_getVideoAdvert', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
@@ -586,16 +524,11 @@ function getGrowthReward() {
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if (data['resultCode'] === '0') {
-              if (data.data) {
-                for (let item of data.data) {
-                  if (item.status === 1) {
-                    if (item.eventRecordId) await obtainAward(item.eventRecordId);
-                  }
-                }
-                if ($.GROWTH_REWARD_BEAN > 0) {
-                  message += `解锁等级奖励：获得${$.GROWTH_REWARD_BEAN}京豆\n`;
-                }
+            if (data['success']) {
+              $.log(`点击幸运盒子成功，剩余观看视频次数：${data.data.advertViewTimes}, ${data.data.advertViewTimes > 0 ? '等待30秒' : '跳出'}`)
+              if (data.data.advertViewTimes > 0) {
+                await $.wait(30000)
+                await rewardBox(eventType, boxId);
               }
             }
           }
@@ -608,19 +541,22 @@ function getGrowthReward() {
     })
   })
 }
-function obtainAward(eventRecordId) {
+
+function rewardBox(eventType, boxId) {
+  let body = { eventType, "eventRecordId": boxId}
   return new Promise(async resolve => {
-    const body = {"eventType": "GROWTH_REWARD", eventRecordId};
     $.get(taskUrl('crazyJoy_event_obtainAward', JSON.stringify(body)), async (err, resp, data) => {
       try {
         if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
+          $.log(`${JSON.stringify(err)}`)
+          $.log(`${$.name} API请求失败，请检查网路重试`)
         } else {
           if (safeGet(data)) {
             data = JSON.parse(data);
-            if (data['resultCode'] === '0') {
-              $.GROWTH_REWARD_BEAN += data.data['beans'];
+            if (data['success']) {
+              $.log(`幸运盒子奖励领取成功，获得：${data.data.beans}京豆，${data.data.coins}金币`)
+            } else {
+              $.log(`幸运盒子奖励领取失败，错误信息：${data.message || JSON.stringify(data)}`)
             }
           }
         }
@@ -632,11 +568,35 @@ function obtainAward(eventRecordId) {
     })
   })
 }
-function showMsg() {
+
+function getGrowState() {
+  let body = {"paramData":{"eventType":"GROWTH_REWARD"}}
   return new Promise(async resolve => {
-    message += `当前信息：${$.bean}京豆，${$.coin}金币`
-    $.msg($.name, '', `京东账号${$.index} ${$.nickName}\n${message}`)
-    resolve()
+    $.get(taskUrl('crazyJoy_event_getGrowthAndSceneState', JSON.stringify(body)), async (err, resp, data) => {
+      try {
+        if (err) {
+          $.log(`${JSON.stringify(err)}`)
+          $.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data['success'] && data.data) {
+              for(let vo of data.data){
+                if(vo['status']){
+                  console.log(`${vo['joyId']}升级奖励可以领取`)
+                }
+              }
+            } else {
+              $.log(`幸运盒子奖励领取失败，错误信息：${data.message || JSON.stringify(data)}`)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve();
+      }
+    })
   })
 }
 function taskUrl(functionId, body = '') {
@@ -658,84 +618,6 @@ function taskUrl(functionId, body = '') {
       'Accept-Encoding': 'gzip, deflate, br',
     }
   }
-}
-function readShareCode() {
-  console.log(`开始`)
-  return new Promise(async resolve => {
-    $.get({url: `https://code.chiang.fun/api/v1/jd/jdcrazyjoy/read/${randomCount}/`, 'timeout': 10000}, (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (data) {
-            console.log(`随机取${randomCount}个码放到您固定的互助码后面(不影响已有固定互助)`)
-            data = JSON.parse(data);
-          }
-        }
-      } catch (e) {
-        $.logErr(e, resp)
-      } finally {
-        resolve(data);
-      }
-    })
-    await $.wait(10000);
-    resolve()
-  })
-}
-//格式化助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
-    $.newShareCodes = [];
-    if ($.shareCodesArr[$.index - 1]) {
-      $.newShareCodes = $.shareCodesArr[$.index - 1].split('@');
-    } else {
-      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
-      const tempIndex = $.index > inviteCodes.length ? (inviteCodes.length - 1) : ($.index - 1);
-      $.newShareCodes = inviteCodes[tempIndex].split('@');
-    }
-    const readShareCodeRes = await readShareCode();
-    if (readShareCodeRes && readShareCodeRes.code === 200) {
-      $.newShareCodes = [...new Set([...$.newShareCodes, ...(readShareCodeRes.data || [])])];
-    }
-    console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.newShareCodes)}`)
-    resolve();
-  })
-}
-
-function requireConfig() {
-  return new Promise(resolve => {
-    console.log(`开始获取${$.name}配置文件\n`);
-    //Node.js用户请在jdCookie.js处填写京东ck;
-    let shareCodes = [];
-    if ($.isNode()) {
-      if (process.env.JDJOY_SHARECODES) {
-        if (process.env.JDJOY_SHARECODES.indexOf('\n') > -1) {
-          shareCodes = process.env.JDJOY_SHARECODES.split('\n');
-        } else {
-          shareCodes = process.env.JDJOY_SHARECODES.split('&');
-        }
-      }
-      if (process.env.JDJOY_HELPSELF) {
-        helpSelf = process.env.JDJOY_HELPSELF
-      }
-      if (process.env.JDJOY_APPLYJDBEAN) {
-        applyJdBean = process.env.JDJOY_APPLYJDBEAN
-      }
-    }
-    console.log(`共${cookiesArr.length}个京东账号\n`);
-    $.shareCodesArr = [];
-    if ($.isNode()) {
-      Object.keys(shareCodes).forEach((item) => {
-        if (shareCodes[item]) {
-          $.shareCodesArr.push(shareCodes[item])
-        }
-      })
-    }
-    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
-    resolve()
-  })
 }
 
 function safeGet(data) {
@@ -801,14 +683,6 @@ function jsonParse(str) {
       return [];
     }
   }
-}
-/**
- * 生成随机数字
- * @param {number} min 最小值（包含）
- * @param {number} max 最大值（不包含）
- */
-function randomNumber(min = 0, max = 100) {
-  return Math.min(Math.floor(min + Math.random() * (max - min)), max);
 }
 // prettier-ignore
 function Env(t,e){class s{constructor(t){this.env=t}send(t,e="GET"){t="string"==typeof t?{url:t}:t;let s=this.get;return"POST"===e&&(s=this.post),new Promise((e,i)=>{s.call(this,t,(t,s,r)=>{t?i(t):e(s)})})}get(t){return this.send.call(this.env,t)}post(t){return this.send.call(this.env,t,"POST")}}return new class{constructor(t,e){this.name=t,this.http=new s(this),this.data=null,this.dataFile="box.dat",this.logs=[],this.isMute=!1,this.isNeedRewrite=!1,this.logSeparator="\n",this.startTime=(new Date).getTime(),Object.assign(this,e),this.log("",`\ud83d\udd14${this.name}, \u5f00\u59cb!`)}isNode(){return"undefined"!=typeof module&&!!module.exports}isQuanX(){return"undefined"!=typeof $task}isSurge(){return"undefined"!=typeof $httpClient&&"undefined"==typeof $loon}isLoon(){return"undefined"!=typeof $loon}toObj(t,e=null){try{return JSON.parse(t)}catch{return e}}toStr(t,e=null){try{return JSON.stringify(t)}catch{return e}}getjson(t,e){let s=e;const i=this.getdata(t);if(i)try{s=JSON.parse(this.getdata(t))}catch{}return s}setjson(t,e){try{return this.setdata(JSON.stringify(t),e)}catch{return!1}}getScript(t){return new Promise(e=>{this.get({url:t},(t,s,i)=>e(i))})}runScript(t,e){return new Promise(s=>{let i=this.getdata("@chavy_boxjs_userCfgs.httpapi");i=i?i.replace(/\n/g,"").trim():i;let r=this.getdata("@chavy_boxjs_userCfgs.httpapi_timeout");r=r?1*r:20,r=e&&e.timeout?e.timeout:r;const[o,h]=i.split("@"),a={url:`http://${h}/v1/scripting/evaluate`,body:{script_text:t,mock_type:"cron",timeout:r},headers:{"X-Key":o,Accept:"*/*"}};this.post(a,(t,e,i)=>s(i))}).catch(t=>this.logErr(t))}loaddata(){if(!this.isNode())return{};{this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),i=!s&&this.fs.existsSync(e);if(!s&&!i)return{};{const i=s?t:e;try{return JSON.parse(this.fs.readFileSync(i))}catch(t){return{}}}}}writedata(){if(this.isNode()){this.fs=this.fs?this.fs:require("fs"),this.path=this.path?this.path:require("path");const t=this.path.resolve(this.dataFile),e=this.path.resolve(process.cwd(),this.dataFile),s=this.fs.existsSync(t),i=!s&&this.fs.existsSync(e),r=JSON.stringify(this.data);s?this.fs.writeFileSync(t,r):i?this.fs.writeFileSync(e,r):this.fs.writeFileSync(t,r)}}lodash_get(t,e,s){const i=e.replace(/\[(\d+)\]/g,".$1").split(".");let r=t;for(const t of i)if(r=Object(r)[t],void 0===r)return s;return r}lodash_set(t,e,s){return Object(t)!==t?t:(Array.isArray(e)||(e=e.toString().match(/[^.[\]]+/g)||[]),e.slice(0,-1).reduce((t,s,i)=>Object(t[s])===t[s]?t[s]:t[s]=Math.abs(e[i+1])>>0==+e[i+1]?[]:{},t)[e[e.length-1]]=s,t)}getdata(t){let e=this.getval(t);if(/^@/.test(t)){const[,s,i]=/^@(.*?)\.(.*?)$/.exec(t),r=s?this.getval(s):"";if(r)try{const t=JSON.parse(r);e=t?this.lodash_get(t,i,""):e}catch(t){e=""}}return e}setdata(t,e){let s=!1;if(/^@/.test(e)){const[,i,r]=/^@(.*?)\.(.*?)$/.exec(e),o=this.getval(i),h=i?"null"===o?null:o||"{}":"{}";try{const e=JSON.parse(h);this.lodash_set(e,r,t),s=this.setval(JSON.stringify(e),i)}catch(e){const o={};this.lodash_set(o,r,t),s=this.setval(JSON.stringify(o),i)}}else s=this.setval(t,e);return s}getval(t){return this.isSurge()||this.isLoon()?$persistentStore.read(t):this.isQuanX()?$prefs.valueForKey(t):this.isNode()?(this.data=this.loaddata(),this.data[t]):this.data&&this.data[t]||null}setval(t,e){return this.isSurge()||this.isLoon()?$persistentStore.write(t,e):this.isQuanX()?$prefs.setValueForKey(t,e):this.isNode()?(this.data=this.loaddata(),this.data[e]=t,this.writedata(),!0):this.data&&this.data[e]||null}initGotEnv(t){this.got=this.got?this.got:require("got"),this.cktough=this.cktough?this.cktough:require("tough-cookie"),this.ckjar=this.ckjar?this.ckjar:new this.cktough.CookieJar,t&&(t.headers=t.headers?t.headers:{},void 0===t.headers.Cookie&&void 0===t.cookieJar&&(t.cookieJar=this.ckjar))}get(t,e=(()=>{})){t.headers&&(delete t.headers["Content-Type"],delete t.headers["Content-Length"]),this.isSurge()||this.isLoon()?(this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.get(t,(t,s,i)=>{!t&&s&&(s.body=i,s.statusCode=s.status),e(t,s,i)})):this.isQuanX()?(this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>e(t))):this.isNode()&&(this.initGotEnv(t),this.got(t).on("redirect",(t,e)=>{try{if(t.headers["set-cookie"]){const s=t.headers["set-cookie"].map(this.cktough.Cookie.parse).toString();s&&this.ckjar.setCookieSync(s,null),e.cookieJar=this.ckjar}}catch(t){this.logErr(t)}}).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>{const{message:s,response:i}=t;e(s,i,i&&i.body)}))}post(t,e=(()=>{})){if(t.body&&t.headers&&!t.headers["Content-Type"]&&(t.headers["Content-Type"]="application/x-www-form-urlencoded"),t.headers&&delete t.headers["Content-Length"],this.isSurge()||this.isLoon())this.isSurge()&&this.isNeedRewrite&&(t.headers=t.headers||{},Object.assign(t.headers,{"X-Surge-Skip-Scripting":!1})),$httpClient.post(t,(t,s,i)=>{!t&&s&&(s.body=i,s.statusCode=s.status),e(t,s,i)});else if(this.isQuanX())t.method="POST",this.isNeedRewrite&&(t.opts=t.opts||{},Object.assign(t.opts,{hints:!1})),$task.fetch(t).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>e(t));else if(this.isNode()){this.initGotEnv(t);const{url:s,...i}=t;this.got.post(s,i).then(t=>{const{statusCode:s,statusCode:i,headers:r,body:o}=t;e(null,{status:s,statusCode:i,headers:r,body:o},o)},t=>{const{message:s,response:i}=t;e(s,i,i&&i.body)})}}time(t){let e={"M+":(new Date).getMonth()+1,"d+":(new Date).getDate(),"H+":(new Date).getHours(),"m+":(new Date).getMinutes(),"s+":(new Date).getSeconds(),"q+":Math.floor(((new Date).getMonth()+3)/3),S:(new Date).getMilliseconds()};/(y+)/.test(t)&&(t=t.replace(RegExp.$1,((new Date).getFullYear()+"").substr(4-RegExp.$1.length)));for(let s in e)new RegExp("("+s+")").test(t)&&(t=t.replace(RegExp.$1,1==RegExp.$1.length?e[s]:("00"+e[s]).substr((""+e[s]).length)));return t}msg(e=t,s="",i="",r){const o=t=>{if(!t)return t;if("string"==typeof t)return this.isLoon()?t:this.isQuanX()?{"open-url":t}:this.isSurge()?{url:t}:void 0;if("object"==typeof t){if(this.isLoon()){let e=t.openUrl||t.url||t["open-url"],s=t.mediaUrl||t["media-url"];return{openUrl:e,mediaUrl:s}}if(this.isQuanX()){let e=t["open-url"]||t.url||t.openUrl,s=t["media-url"]||t.mediaUrl;return{"open-url":e,"media-url":s}}if(this.isSurge()){let e=t.url||t.openUrl||t["open-url"];return{url:e}}}};if(this.isMute||(this.isSurge()||this.isLoon()?$notification.post(e,s,i,o(r)):this.isQuanX()&&$notify(e,s,i,o(r))),!this.isMuteLog){let t=["","==============\ud83d\udce3\u7cfb\u7edf\u901a\u77e5\ud83d\udce3=============="];t.push(e),s&&t.push(s),i&&t.push(i),console.log(t.join("\n")),this.logs=this.logs.concat(t)}}log(...t){t.length>0&&(this.logs=[...this.logs,...t]),console.log(t.join(this.logSeparator))}logErr(t,e){const s=!this.isSurge()&&!this.isQuanX()&&!this.isLoon();s?this.log("",`\u2757\ufe0f${this.name}, \u9519\u8bef!`,t.stack):this.log("",`\u2757\ufe0f${this.name}, \u9519\u8bef!`,t)}wait(t){return new Promise(e=>setTimeout(e,t))}done(t={}){const e=(new Date).getTime(),s=(e-this.startTime)/1e3;this.log("",`\ud83d\udd14${this.name}, \u7ed3\u675f! \ud83d\udd5b ${s} \u79d2`),this.log(),(this.isSurge()||this.isQuanX()||this.isLoon())&&$done(t)}}(t,e)}
