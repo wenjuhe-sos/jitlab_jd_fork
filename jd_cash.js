@@ -32,6 +32,8 @@ const inviteCodes = [
   `eU9Ya7nhZ_klpG3XnnYXhQ`,
   `eU9Ya-vmM_Qk-D-HwnoT0Q`,
   `W05rMLNn6mzzTNADWuE`,
+  `cBk3be6zZPwv9Gk`,
+  `eU9YaOy6N6119zvWmSYS1g`,
   `eU9YaLrgYKoi8D_dmXYXgg`,
   `eU9YaL7mZqgk8GqDyXFA0Q`,
   `Yl5sMLDvMKNkpCiAiQ`
